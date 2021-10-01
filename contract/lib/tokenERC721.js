@@ -31,12 +31,16 @@ class TokenERC721Contract extends Contract {
 
         // Count the number of returned composite keys
         let balance = 0;
+        let nft_id = [];
         let result = await iterator.next();
         while (!result.done) {
+            nft_id[balance] = balancePrefix.owner.getID();
             balance++;
             result = await iterator.next();
+            
         }
-        return balance;
+        console.log(nft_id + "Hello");
+        return (balance + "Hello");
     }
 
     /**
@@ -55,6 +59,8 @@ class TokenERC721Contract extends Contract {
 
         return owner;
     }
+
+    // async balance
 
     /**
      * TransferFrom transfers the ownership of a non-fungible token
@@ -272,10 +278,10 @@ class TokenERC721Contract extends Contract {
     async SetOption(ctx, name, symbol) {
 
         // Check minter authorization - this sample assumes Org1 is the issuer with privilege to set the name and symbol
-        const clientMSPID = ctx.clientIdentity.getMSPID();
-        if (clientMSPID !== 'Org1MSP') {
-            throw new Error('client is not authorized to set the name and symbol of the token');
-        }
+        // const clientMSPID = ctx.clientIdentity.getMSPID();
+        // if (clientMSPID !== 'Org1MSP') {
+        //     throw new Error('client is not authorized to set the name and symbol of the token');
+        // }
 
         await ctx.stub.putState(nameKey, Buffer.from(name));
         await ctx.stub.putState(symbolKey, Buffer.from(symbol));
@@ -295,10 +301,10 @@ class TokenERC721Contract extends Contract {
     async MintWithTokenURI(ctx, tokenId, tokenURI) {
 
         // Check minter authorization - this sample assumes Org1 is the issuer with privilege to mint a new token
-        const clientMSPID = ctx.clientIdentity.getMSPID();
-        if (clientMSPID !== 'Org1MSP') {
-            throw new Error('client is not authorized to mint new tokens');
-        }
+        // const clientMSPID = ctx.clientIdentity.getMSPID();
+        // if (clientMSPID !== 'Org1MSP') {
+        //     throw new Error('client is not authorized to mint new tokens');
+        // }
 
         // Get ID of submitting client identity
         const minter = ctx.clientIdentity.getID();
@@ -377,6 +383,24 @@ class TokenERC721Contract extends Contract {
         return nft;
     }
 
+    /**
+     * Mint a new non-fungible token
+     * 
+     * @idea add proposed price and sold price to the nft object.
+     *
+     * @param {Context} ctx the transaction context
+     * @param {String} tokenId Unique ID of the non-fungible token to be minted
+     * @param {String} tokenURI URI containing metadata of the minted non-fungible token
+     * @returns {Object} Return the non-fungible token object
+    */
+    async ReadNFT(ctx, tokenId) {
+        const nftKey = ctx.stub.createCompositeKey(nftPrefix, [tokenId]);
+        const nftBytes = await ctx.stub.getState(nftKey);
+        if (!nftBytes || nftBytes.length === 0) {
+            throw new Error(`The tokenId ${tokenId} is invalid. It does not exist`);
+        }
+        return JSON.parse(nftBytes.toString());
+    }
     async _nftExists(ctx, tokenId) {
         const nftKey = ctx.stub.createCompositeKey(nftPrefix, [tokenId]);
         const nftBytes = await ctx.stub.getState(nftKey);
@@ -392,6 +416,14 @@ class TokenERC721Contract extends Contract {
     async ClientAccountBalance(ctx) {
         // Get ID of submitting client identity
         const clientAccountID = ctx.clientIdentity.getID();
+        console.log("Hello");
+        return this.BalanceOf(ctx, clientAccountID);
+    }
+
+    async ClientAccountBalances(ctx) {
+        // Get ID of submitting client identity
+        const clientAccountID = ctx.clientIdentity.getID();
+        // console.log("Hello");
         return this.BalanceOf(ctx, clientAccountID);
     }
 
